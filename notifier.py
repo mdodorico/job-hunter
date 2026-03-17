@@ -2,16 +2,14 @@
 # NOTIFIER - Envío de emails con las alertas de trabajo
 # ============================================================
 
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+import resend
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-EMAIL_REMITENTE = os.getenv("EMAIL_REMITENTE")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+resend.api_key = os.getenv("RESEND_API_KEY")
+EMAIL_REMITENTE = "Job Hunter <onboarding@resend.dev>"
 
 
 def enviar_email(destinatario: str, oferta: dict):
@@ -27,12 +25,6 @@ def enviar_email(destinatario: str, oferta: dict):
     }
     """
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🚀 Nueva oferta: {oferta['titulo']} en {oferta['empresa']}"
-        msg["From"] = EMAIL_REMITENTE
-        msg["To"] = destinatario
-
-        # ── Cuerpo del email en HTML ─────────────────────────
         html = f"""
         <html>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
@@ -57,12 +49,12 @@ def enviar_email(destinatario: str, oferta: dict):
                     </tr>
                 </table>
 
-                {f'<p style="color: #555; margin-top: 15px;">{oferta["descripcion"]}</p>' 
+                {f'<p style="color: #555; margin-top: 15px;">{oferta["descripcion"]}</p>'
                  if oferta.get('descripcion') else ''}
 
                 <div style="margin-top: 25px; text-align: center;">
-                    <a href="{oferta['url']}" 
-                       style="background-color: #4A90D9; color: white; padding: 12px 30px; 
+                    <a href="{oferta['url']}"
+                       style="background-color: #4A90D9; color: white; padding: 12px 30px;
                               text-decoration: none; border-radius: 5px; font-size: 16px;">
                         Ver oferta completa →
                     </a>
@@ -75,14 +67,12 @@ def enviar_email(destinatario: str, oferta: dict):
         </html>
         """
 
-        msg.attach(MIMEText(html, "html"))
-
-       # ── Envío via Gmail SMTP ─────────────────────────────
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(EMAIL_REMITENTE, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_REMITENTE, destinatario, msg.as_string())
+        resend.Emails.send({
+            "from": EMAIL_REMITENTE,
+            "to": destinatario,
+            "subject": f"🚀 Nueva oferta: {oferta['titulo']} en {oferta['empresa']}",
+            "html": html,
+        })
 
         print(f"✅ Email enviado: {oferta['titulo']} en {oferta['empresa']}")
         return True
@@ -100,17 +90,12 @@ def enviar_email_resumen(destinatario: str, ofertas: list):
         return
 
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🚀 Job Hunter — {len(ofertas)} nuevas ofertas encontradas"
-        msg["From"] = EMAIL_REMITENTE
-        msg["To"] = destinatario
-
         filas = ""
         for o in ofertas:
             filas += f"""
             <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 12px 8px;">
-                    <a href="{o['url']}" style="color: #4A90D9; font-weight: bold; 
+                    <a href="{o['url']}" style="color: #4A90D9; font-weight: bold;
                        text-decoration: none;">{o['titulo']}</a>
                 </td>
                 <td style="padding: 12px 8px;">{o['empresa']}</td>
@@ -150,14 +135,12 @@ def enviar_email_resumen(destinatario: str, ofertas: list):
         </html>
         """
 
-        msg.attach(MIMEText(html, "html"))
-
-        # ── Envío via Gmail SMTP ─────────────────────────────
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(EMAIL_REMITENTE, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_REMITENTE, destinatario, msg.as_string())
+        resend.Emails.send({
+            "from": EMAIL_REMITENTE,
+            "to": destinatario,
+            "subject": f"🚀 Job Hunter — {len(ofertas)} nuevas ofertas encontradas",
+            "html": html,
+        })
 
         print(f"✅ Resumen enviado: {len(ofertas)} ofertas")
         return True
