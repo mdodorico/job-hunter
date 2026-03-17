@@ -78,7 +78,7 @@ def enviar_email(destinatario: str, oferta: dict):
         msg.attach(MIMEText(html, "html"))
 
         # ── Envío via Gmail SMTP ─────────────────────────────
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 587) as server:
             server.login(EMAIL_REMITENTE, EMAIL_PASSWORD)
             server.sendmail(EMAIL_REMITENTE, destinatario, msg.as_string())
 
