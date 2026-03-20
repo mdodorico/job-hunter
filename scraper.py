@@ -111,11 +111,17 @@ def obtener_detalle_oferta(url: str) -> str:
         return ""
 
 
-def oferta_pasa_filtro_profundo(titulo: str, url: str) -> bool:
+def oferta_pasa_filtro_profundo(titulo: str, url: str, ubicacion: str = "") -> bool:
     """
     Filtra por ubicación en título y cuerpo del aviso.
     Lógica única: si se menciona una ubicación, debe estar en la lista aceptada.
     """
+    # ── Filtro 0: ubicación explícita del card ────────────────
+    if ubicacion and ubicacion not in ("Ver oferta", "Argentina"):
+        ub_lower = ubicacion.lower()
+        if not ubicacion_es_aceptada(ub_lower):
+            return False
+
     titulo_lower = titulo.lower()
 
     # ── Filtro 1: título ─────────────────────────────────────
@@ -268,7 +274,7 @@ def scrape_linkedin() -> list:
                     link = link_tag["href"] if link_tag else ""
 
                     if titulo and oferta_es_relevante(titulo):
-                        if oferta_pasa_filtro_profundo(titulo, link):
+                        if oferta_pasa_filtro_profundo(titulo, link, ubicacion=ubicacion):
                             ofertas.append({
                                 "titulo": titulo,
                                 "empresa": empresa,
