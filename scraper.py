@@ -4,12 +4,27 @@
 
 import requests
 import time
+import re
+from urllib.parse import urlparse, urlunparse
 from bs4 import BeautifulSoup
 from rapidfuzz import fuzz
 from config import (
     KEYWORDS, KEYWORDS_URL, NIVELES_ACEPTADOS, NIVELES_EXCLUYENTES,
     UBICACIONES_ACEPTADAS, INDICADORES_UBICACION, PERFILES_IT, SITIOS
 )
+
+
+def normalizar_id(url: str) -> str:
+    """
+    Genera un ID estable a partir de una URL eliminando parámetros de tracking.
+    Para LinkedIn extrae solo el ID numérico de la oferta.
+    """
+    parsed = urlparse(url)
+    if "linkedin.com" in parsed.netloc:
+        match = re.search(r'/jobs/view/(\d+)', parsed.path)
+        if match:
+            return f"linkedin_{match.group(1)}"
+    return urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))
 
 # ── HEADERS para no ser bloqueados ──────────────────────────
 HEADERS = {
@@ -198,7 +213,7 @@ def scrape_computrabajo() -> list:
                                 "url": link,
                                 "fuente": "Computrabajo",
                                 "descripcion": "",
-                                "id": link,
+                                "id": normalizar_id(link),
                             })
                             time.sleep(1)
                 except Exception:
@@ -261,7 +276,7 @@ def scrape_linkedin() -> list:
                                 "url": link,
                                 "fuente": "LinkedIn",
                                 "descripcion": "",
-                                "id": link,
+                                "id": normalizar_id(link),
                             })
                             time.sleep(1)
                 except Exception:
@@ -325,7 +340,7 @@ def scrape_empleosit() -> list:
                                 "url": link,
                                 "fuente": "EmpleosIT",
                                 "descripcion": "",
-                                "id": link,
+                                "id": normalizar_id(link),
                             })
                             time.sleep(1)
                 except Exception:
@@ -352,5 +367,13 @@ def obtener_todas_las_ofertas() -> list:
     if SITIOS.get("empleosit"):
         todas += scrape_empleosit()
 
-    print(f"\n📊 Total ofertas encontradas: {len(todas)}")
-    return todas
+    # Deduplicar por ID (una misma oferta puede aparecer en varias búsquedas)
+    ids_vistos = set()
+    unicas = []
+    for oferta in todas:
+        if oferta["id"] not in ids_vistos:
+            ids_vistos.add(oferta["id"])
+            unicas.append(oferta)
+
+    print(f"\n📊 Total ofertas únicas encontradas: {len(unicas)}")
+    return unicas
