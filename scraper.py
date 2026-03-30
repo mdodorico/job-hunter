@@ -124,13 +124,7 @@ def oferta_pasa_filtro_profundo(titulo: str, url: str, ubicacion: str = "") -> b
 
     titulo_lower = titulo.lower()
 
-    # ── Filtro 1: título ─────────────────────────────────────
-    # Chequeamos directamente si el título menciona una ubicación aceptada
-    # o si menciona una ubicación genérica (indicador) sin que sea aceptada
-    titulo_lower = titulo.lower()
-
     # Extraer texto entre paréntesis del título si existe
-    import re
     entre_parentesis = re.findall(r'\(([^)]+)\)', titulo_lower)
     for fragmento in entre_parentesis:
         fragmento = fragmento.strip()
@@ -211,11 +205,11 @@ def scrape_computrabajo() -> list:
                         link = "https://ar.computrabajo.com" + link
 
                     if titulo and oferta_es_relevante(titulo):
-                        if oferta_pasa_filtro_profundo(titulo, link):
+                        if oferta_pasa_filtro_profundo(titulo, link, ubicacion=ubicacion):
                             ofertas.append({
                                 "titulo": titulo,
                                 "empresa": empresa,
-                                "ubicacion": "Argentina",
+                                "ubicacion": ubicacion,
                                 "url": link,
                                 "fuente": "Computrabajo",
                                 "descripcion": "",

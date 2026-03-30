@@ -2,9 +2,8 @@
 # MAIN - Punto de entrada del sistema Job Hunter
 # ============================================================
 
-import time
 from datetime import datetime
-from config import EMAIL_DESTINO, INTERVALO_SEGUNDOS, NOMBRE
+from config import EMAIL_DESTINO, INTERVALO_SEGUNDOS
 from scraper import obtener_todas_las_ofertas
 from notifier import enviar_email_resumen
 from storage import cargar_vistos, guardar_vistos
@@ -39,6 +38,9 @@ def ejecutar_busqueda():
 
     # ── Filtrar las que ya vimos ─────────────────────────────
     vistos = cargar_vistos()
+    if vistos is None:
+        print("⚠️ Búsqueda cancelada: no se pudo acceder a Google Sheets.")
+        return
     nuevas = [o for o in todas if o["id"] not in vistos]
 
     print(f"\n📬 Ofertas nuevas (no notificadas antes): {len(nuevas)}")
@@ -58,18 +60,5 @@ def ejecutar_busqueda():
     print(f"\n⏰ Próxima búsqueda en {INTERVALO_SEGUNDOS // 60} minutos")
 
 
-def main():
-    """
-    Loop principal — ejecuta la búsqueda cada X minutos indefinidamente.
-    """
-    print(f"🚀 Job Hunter iniciado para {NOMBRE}")
-    print(f"📧 Notificaciones a: {EMAIL_DESTINO}")
-    print(f"⏰ Intervalo de búsqueda: {INTERVALO_SEGUNDOS // 60} minutos")
-
-    while True:
-        ejecutar_busqueda()
-        time.sleep(INTERVALO_SEGUNDOS)
-
-
 if __name__ == "__main__":
-    main()
+    ejecutar_busqueda()

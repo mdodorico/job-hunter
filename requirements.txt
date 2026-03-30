@@ -3,6 +3,7 @@ beautifulsoup4
 rapidfuzz
 python-dotenv
 flask
+gunicorn
 gspread
 google-auth
 resend

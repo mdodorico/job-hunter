@@ -47,21 +47,23 @@ def get_sheet():
         return None
 
 
-def cargar_vistos() -> set:
+def cargar_vistos():
     """
     Carga los IDs de ofertas ya notificadas desde Google Sheets.
+    Retorna None si no se pudo conectar, para evitar enviar duplicados.
     """
     try:
         sheet = get_sheet()
         if not sheet:
-            return set()
+            print("❌ No se pudo conectar con Google Sheets. Abortando para evitar duplicados.")
+            return None
 
         ids = sheet.col_values(1)
         return set(ids[1:]) if len(ids) > 1 else set()
 
     except Exception as e:
         print(f"❌ Error cargando vistos desde Sheets: {e}")
-        return set()
+        return None
 
 
 def guardar_vistos(nuevos_ids: list):
