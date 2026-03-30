@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptar CV — Job Hunter</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        header {
+            background: #4A90D9;
+            color: white;
+            padding: 24px 40px;
+            border-radius: 12px 12px 0 0;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        header h1 { font-size: 28px; margin-bottom: 4px; }
+        header p { color: #e8f4fd; font-size: 14px; }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 12px 12px;
+            padding: 36px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .menu {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .menu a {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: #f0f4f8;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #4A90D9;
+            font-weight: bold;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .menu a:hover, .menu a.active {
+            background: #4A90D9;
+            color: white;
+        }
+
+        h2 { color: #2c3e50; margin-bottom: 8px; font-size: 20px; }
+
+        .subtitulo {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input[type="url"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #4A90D9;
+        }
+
+        .file-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            background: #fafafa;
+            transition: border-color 0.2s;
+        }
+
+        .file-area:hover { border-color: #4A90D9; }
+        .file-area.tiene-archivo { border-color: #27ae60; background: #f0fff4; }
+
+        .file-area p { color: #aaa; font-size: 14px; margin-top: 6px; }
+        .file-area .nombre-archivo { color: #27ae60; font-weight: bold; }
+
+        input[type="file"] { display: none; }
+
+        .formato-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .formato-opcion {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+        .formato-opcion.seleccionado {
+            border-color: #4A90D9;
+            background: #e8f4fd;
+            color: #2471a3;
+            font-weight: bold;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #4A90D9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #357abd; }
+        .btn:disabled { background: #aaa; cursor: not-allowed; }
+
+        .estado {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .estado.procesando { background: #e8f4fd; color: #2471a3; }
+        .estado.error { background: #fde8e8; color: #c0392b; }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #a8d4f5;
+            border-top-color: #2471a3;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎯 Job Hunter</h1>
+    <p>Tu asistente de búsqueda de empleo</p>
+</header>
+
+<div class="card">
+    <div class="menu">
+        <a href="/">🏠 Inicio</a>
+        <a href="/adaptar" class="active">📄 Adaptar CV</a>
+    </div>
+
+    <h2>Adaptador de CV</h2>
+    <p class="subtitulo">
+        Pegá el link del aviso que te interesa, subí tu CV y la IA lo adapta para ese puesto.
+        Sin mentiras: solo resalta lo mejor de lo que ya tenés.
+    </p>
+
+    <form id="formulario">
+        <label for="url">Link del aviso de trabajo</label>
+        <input type="url" id="url" name="url" placeholder="https://www.linkedin.com/jobs/view/..." required>
+
+        <label>Tu CV (PDF o Word)</label>
+        <div class="file-area" id="file-area" onclick="document.getElementById('cv').click()">
+            <div style="font-size: 32px;">📎</div>
+            <p id="file-label">Hacé click para seleccionar tu CV</p>
+            <p>Formatos aceptados: PDF, DOC, DOCX</p>
+        </div>
+        <input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx" onchange="mostrarArchivo(this)">
+
+        <label>Formato de descarga</label>
+        <div class="formato-row">
+            <div class="formato-opcion seleccionado" onclick="seleccionarFormato('word', this)">
+                📝 Word (.docx)
+            </div>
+            <div class="formato-opcion" onclick="seleccionarFormato('pdf', this)">
+                📄 PDF
+            </div>
+        </div>
+        <input type="hidden" id="formato" value="word">
+
+        <button type="submit" class="btn" id="btn-adaptar">Adaptar mi CV</button>
+    </form>
+
+    <div id="estado" class="estado" style="display:none;"></div>
+</div>
+
+<script>
+    function mostrarArchivo(input) {
+        const area = document.getElementById("file-area");
+        const label = document.getElementById("file-label");
+        if (input.files.length > 0) {
+            label.textContent = input.files[0].name;
+            label.className = "nombre-archivo";
+            area.className = "file-area tiene-archivo";
+        }
+    }
+
+    function seleccionarFormato(valor, el) {
+        document.querySelectorAll(".formato-opcion").forEach(e => e.classList.remove("seleccionado"));
+        el.classList.add("seleccionado");
+        document.getElementById("formato").value = valor;
+    }
+
+    document.getElementById("formulario").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const url = document.getElementById("url").value;
+        const cv = document.getElementById("cv").files[0];
+        const formato = document.getElementById("formato").value;
+        const estado = document.getElementById("estado");
+        const btn = document.getElementById("btn-adaptar");
+
+        if (!cv) {
+            estado.className = "estado error";
+            estado.style.display = "block";
+            estado.textContent = "Por favor seleccioná tu CV antes de continuar.";
+            return;
+        }
+
+        btn.disabled = true;
+        estado.className = "estado procesando";
+        estado.style.display = "block";
+        estado.innerHTML = '<span class="spinner"></span> La IA está analizando el aviso y adaptando tu CV... esto puede tardar unos segundos.';
+
+        const formData = new FormData();
+        formData.append("url", url);
+        formData.append("cv", cv);
+        formData.append("formato", formato);
+
+        try {
+            const response = await fetch("/adaptar", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || "Error desconocido");
+            }
+
+            const blob = await response.blob();
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = formato === "pdf" ? "cv_adaptado.pdf" : "cv_adaptado.docx";
+            link.click();
+
+            estado.className = "estado procesando";
+            estado.innerHTML = "✅ ¡Tu CV adaptado fue descargado!";
+
+        } catch (err) {
+            estado.className = "estado error";
+            estado.innerHTML = "❌ " + err.message;
+        } finally {
+            btn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

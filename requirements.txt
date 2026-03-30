@@ -7,3 +7,7 @@ gunicorn
 gspread
 google-auth
 resend
+anthropic
+python-docx
+pdfplumber
+fpdf2

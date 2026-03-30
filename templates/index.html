@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Hunter</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        header {
+            background: #4A90D9;
+            color: white;
+            padding: 24px 40px;
+            border-radius: 12px 12px 0 0;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        header h1 { font-size: 28px; margin-bottom: 4px; }
+        header p { color: #e8f4fd; font-size: 14px; }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 12px 12px;
+            padding: 36px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .menu {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .menu a {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: #f0f4f8;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #4A90D9;
+            font-weight: bold;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .menu a:hover, .menu a.active {
+            background: #4A90D9;
+            color: white;
+        }
+
+        h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input[type="url"], input[type="file"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #4A90D9;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #4A90D9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #357abd; }
+        .btn:disabled { background: #aaa; cursor: not-allowed; }
+
+        .estado {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .estado.procesando {
+            background: #e8f4fd;
+            color: #2471a3;
+            display: block;
+        }
+
+        .estado.error {
+            background: #fde8e8;
+            color: #c0392b;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎯 Job Hunter</h1>
+    <p>Tu asistente de búsqueda de empleo</p>
+</header>
+
+<div class="card">
+    <div class="menu">
+        <a href="/" class="active">🏠 Inicio</a>
+        <a href="/adaptar">📄 Adaptar CV</a>
+    </div>
+
+    <h2>Bienvenida a Job Hunter</h2>
+    <p style="color: #555; line-height: 1.7;">
+        Este sistema tiene dos herramientas para ayudarte en tu búsqueda de empleo:
+    </p>
+
+    <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="padding: 20px; background: #f0f4f8; border-radius: 8px;">
+            <strong style="color: #2c3e50;">🔍 Job Hunter automático</strong>
+            <p style="color: #666; font-size: 14px; margin-top: 6px;">
+                Busca ofertas de trabajo cada hora en Computrabajo, LinkedIn y EmpleosIT
+                y te manda un email con las novedades.
+            </p>
+        </div>
+        <div style="padding: 20px; background: #f0f4f8; border-radius: 8px;">
+            <strong style="color: #2c3e50;">📄 Adaptador de CV</strong>
+            <p style="color: #666; font-size: 14px; margin-top: 6px;">
+                Pegá el link de un aviso que te interese, subí tu CV y la IA lo adapta
+                para ese puesto, resaltando tus habilidades y mejorando las keywords ATS.
+            </p>
+            <a href="/adaptar" style="display: inline-block; margin-top: 12px; padding: 8px 20px;
+               background: #4A90D9; color: white; border-radius: 6px; text-decoration: none;
+               font-size: 14px;">Ir al Adaptador →</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
