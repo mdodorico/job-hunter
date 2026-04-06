@@ -5,7 +5,6 @@
 import anthropic
 import requests
 from bs4 import BeautifulSoup
-import os
 from io import BytesIO
 from docx import Document
 import pdfplumber
@@ -46,7 +45,7 @@ def scrapear_aviso(url: str) -> str:
 
 
 def adaptar_cv(cv_texto: str, aviso_texto: str) -> str:
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    client = anthropic.Anthropic()
 
     prompt = f"""Eres un experto en recursos humanos y en optimización de CVs para sistemas ATS \
 (Applicant Tracking Systems).
