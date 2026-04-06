@@ -231,10 +231,13 @@ def scrape_linkedin() -> list:
     searches = [
         "QA Analyst Argentina",
         "Tester Junior Argentina",
-        "Scrum Master Junior Argentina",
+        "Project Manager Junior Argentina",
         "Technical Support Argentina",
         "Analista Funcional Argentina",
-        "Implementation Specialist Argentina",
+        "Knowledge Manager Argentina",
+        "Prompt Engineer Argentina",
+        "Frontend Developer Argentina",
+        "Angular Developer Argentina",
     ]
 
     for search in searches:

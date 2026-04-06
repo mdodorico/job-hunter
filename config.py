@@ -23,35 +23,46 @@ KEYWORDS = [
     "QA", "Tester", "Analista QA", "Control de Calidad", "Testing",
     "QA Analyst", "QA Engineer", "Software Tester", "Quality Assurance",
 
-    # Scrum Master / PM
-    "Scrum Master", "Project Manager", "Gestor de Proyectos",
-    "Junior PM", "Project Coordinator", "Agile Coach",
+    # Project Manager
+    "Project Manager", "Gestor de Proyectos", "Junior PM",
 
     # Technical Support
     "Soporte Técnico", "Mesa de Ayuda", "Help Desk", "Soporte IT",
     "Technical Support", "IT Support", "Service Desk",
 
-    # Analista de Proyectos
-    "Analista de Proyectos", "Coordinador de Proyectos",
-    "Project Analyst", "Junior Project Manager",
-
-    # Functional Analyst
+    # Analista Funcional
     "Analista Funcional", "Analista de Sistemas",
-    "Functional Analyst", "Systems Analyst", "Business Systems Analyst",
+    "Functional Analyst", "Systems Analyst",
 
-    # Implementation / Onboarding
-    "Implementación", "Consultor de Implementación",
-    "Implementation Specialist", "Onboarding Specialist",
-    "Customer Success Technical",
+    # Knowledge Management
+    "Knowledge Manager", "Knowledge Management Specialist",
+    "Gestor del Conocimiento", "Knowledge Management",
+
+    # Prompt Engineer
+    "Prompt Engineer", "Prompt Engineering",
+
+    # Information Manager
+    "Information Manager", "Gestor de Información", "Gestor de Informacion",
+
+    # Documentation Specialist
+    "Documentation Specialist", "Documentación Técnica", "Documentacion Tecnica",
+    "Technical Writer",
+
+    # Frontend / Angular
+    "Frontend Developer", "Front-end Developer", "Desarrollador Frontend",
+    "Angular Developer", "Angular",
 ]
 
 # ── KEYWORDS PARA URLs DE BÚSQUEDA ───────────────────────────
 KEYWORDS_URL = [
     "qa", "tester", "quality-assurance",
+    "project-manager",
     "soporte-tecnico", "help-desk",
-    "analista-de-proyectos", "project-manager",
-    "analista-funcional", "scrum-master",
-    "implementation-specialist",
+    "analista-funcional",
+    "knowledge-manager",
+    "prompt-engineer",
+    "frontend-developer",
+    "angular-developer",
 ]
 
 # ── NIVELES DE SENIORITY ─────────────────────────────────────
@@ -127,8 +138,10 @@ PERFILES_IT = [
     # Tecnologías y roles IT
     "software", "it", " ti ", "tech", "tecnología", "tecnologia",
     "angular", "javascript", "typescript", "python", "java",
+    "frontend", "front-end", "prompt",
     "qa", "tester", "testing", "scrum", "agile", "kanban",
     "soporte", "helpdesk", "help desk",
+    "knowledge management", "documentation",
     # Estudiantes y graduados
     "estudiante", "estudiantes", "graduado", "graduados",
     "recién graduado", "recien graduado", "recent graduate",
