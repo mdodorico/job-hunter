@@ -102,35 +102,32 @@ def _agregar_parrafo_con_negrita(doc, texto: str, justificado: bool = True):
 def generar_word(texto: str) -> bytes:
     doc = Document()
 
-    # Estilo base
     estilo = doc.styles['Normal']
     estilo.font.name = 'Calibri'
     estilo.font.size = Pt(11)
 
+    lineas_vacias_consecutivas = 0
+
     for linea in texto.split("\n"):
         linea_strip = linea.strip()
 
-        # Separadores --- los ignoramos
         if linea_strip in ('---', '***', '___'):
             continue
 
-        # Título principal (#)
+        if not linea_strip:
+            lineas_vacias_consecutivas += 1
+            if lineas_vacias_consecutivas <= 1:
+                doc.add_paragraph('')
+            continue
+
+        lineas_vacias_consecutivas = 0
+
         if linea_strip.startswith('# '):
             doc.add_heading(linea_strip[2:], level=1)
-
-        # Subtítulo (##)
         elif linea_strip.startswith('## '):
             doc.add_heading(linea_strip[3:], level=2)
-
-        # Sub-subtítulo (###)
         elif linea_strip.startswith('### '):
             doc.add_heading(linea_strip[4:], level=3)
-
-        # Línea vacía
-        elif not linea_strip:
-            doc.add_paragraph('')
-
-        # Párrafo normal (con soporte de negritas)
         else:
             _agregar_parrafo_con_negrita(doc, linea_strip)
 
@@ -153,19 +150,54 @@ def _limpiar_para_pdf(texto: str) -> str:
     return texto.encode('latin-1', errors='ignore').decode('latin-1')
 
 
+def _pdf_linea_con_negrita(pdf, texto: str, h: int = 7):
+    partes = re.split(r'(\*\*[^*]+\*\*)', texto)
+    x_inicio = pdf.get_x()
+    for parte in partes:
+        if parte.startswith('**') and parte.endswith('**'):
+            pdf.set_font("Helvetica", style="B", size=11)
+            pdf.write(h, parte[2:-2])
+        elif parte:
+            pdf.set_font("Helvetica", size=11)
+            pdf.write(h, parte)
+    pdf.ln(h)
+
+
 def generar_pdf(texto: str) -> bytes:
     pdf = FPDF()
     pdf.set_margins(20, 20, 20)
     pdf.add_page()
-    pdf.set_font("Helvetica", size=11)
     pdf.set_auto_page_break(auto=True, margin=20)
+
+    lineas_vacias_consecutivas = 0
+
     for linea in texto.split("\n"):
-        linea = _limpiar_para_pdf(linea)
+        linea_strip = _limpiar_para_pdf(linea.strip())
+
+        if linea_strip in ('---', '***', '___'):
+            continue
+
+        if not linea_strip:
+            lineas_vacias_consecutivas += 1
+            if lineas_vacias_consecutivas <= 1:
+                pdf.ln(4)
+            continue
+
+        lineas_vacias_consecutivas = 0
+
         try:
-            if linea.strip():
-                pdf.multi_cell(0, 7, linea)
+            if linea_strip.startswith('# '):
+                pdf.set_font("Helvetica", style="B", size=16)
+                pdf.multi_cell(0, 9, linea_strip[2:])
+            elif linea_strip.startswith('## '):
+                pdf.set_font("Helvetica", style="B", size=13)
+                pdf.multi_cell(0, 8, linea_strip[3:])
+            elif linea_strip.startswith('### '):
+                pdf.set_font("Helvetica", style="B", size=11)
+                pdf.multi_cell(0, 7, linea_strip[4:])
             else:
-                pdf.ln(3)
+                _pdf_linea_con_negrita(pdf, linea_strip)
         except Exception:
-            pdf.ln(3)
+            pdf.ln(4)
+
     return bytes(pdf.output())
