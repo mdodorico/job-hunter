@@ -2,11 +2,14 @@
 # CV ADAPTER - Adapta un CV a un aviso de trabajo usando IA
 # ============================================================
 
+import re
 import anthropic
 import requests
 from bs4 import BeautifulSoup
 from io import BytesIO
 from docx import Document
+from docx.shared import Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 import pdfplumber
 from fpdf import FPDF
 
@@ -82,10 +85,55 @@ Devolvé el CV adaptado completo. No incluyas explicaciones ni comentarios fuera
     return message.content[0].text
 
 
+def _agregar_parrafo_con_negrita(doc, texto: str, justificado: bool = True):
+    p = doc.add_paragraph()
+    if justificado:
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    partes = re.split(r'(\*\*[^*]+\*\*)', texto)
+    for parte in partes:
+        if parte.startswith('**') and parte.endswith('**'):
+            run = p.add_run(parte[2:-2])
+            run.bold = True
+        elif parte:
+            p.add_run(parte)
+    return p
+
+
 def generar_word(texto: str) -> bytes:
     doc = Document()
+
+    # Estilo base
+    estilo = doc.styles['Normal']
+    estilo.font.name = 'Calibri'
+    estilo.font.size = Pt(11)
+
     for linea in texto.split("\n"):
-        doc.add_paragraph(linea)
+        linea_strip = linea.strip()
+
+        # Separadores --- los ignoramos
+        if linea_strip in ('---', '***', '___'):
+            continue
+
+        # Título principal (#)
+        if linea_strip.startswith('# '):
+            doc.add_heading(linea_strip[2:], level=1)
+
+        # Subtítulo (##)
+        elif linea_strip.startswith('## '):
+            doc.add_heading(linea_strip[3:], level=2)
+
+        # Sub-subtítulo (###)
+        elif linea_strip.startswith('### '):
+            doc.add_heading(linea_strip[4:], level=3)
+
+        # Línea vacía
+        elif not linea_strip:
+            doc.add_paragraph('')
+
+        # Párrafo normal (con soporte de negritas)
+        else:
+            _agregar_parrafo_con_negrita(doc, linea_strip)
+
     buffer = BytesIO()
     doc.save(buffer)
     return buffer.getvalue()
@@ -97,22 +145,27 @@ def _limpiar_para_pdf(texto: str) -> str:
         '\u2018': "'", '\u2019': "'",
         '\u201c': '"', '\u201d': '"',
         '\u2022': '-', '\u2026': '...',
-        '\u00b7': '-',
+        '\u00b7': '-', '\u2015': '-',
+        '\u00e2': 'a', '\u20ac': 'EUR',
     }
     for char, reemplazo in reemplazos.items():
         texto = texto.replace(char, reemplazo)
-    return texto.encode('latin-1', errors='replace').decode('latin-1')
+    return texto.encode('latin-1', errors='ignore').decode('latin-1')
 
 
 def generar_pdf(texto: str) -> bytes:
     pdf = FPDF()
+    pdf.set_margins(20, 20, 20)
     pdf.add_page()
     pdf.set_font("Helvetica", size=11)
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_auto_page_break(auto=True, margin=20)
     for linea in texto.split("\n"):
         linea = _limpiar_para_pdf(linea)
-        if linea.strip():
-            pdf.multi_cell(0, 7, linea)
-        else:
+        try:
+            if linea.strip():
+                pdf.multi_cell(0, 7, linea)
+            else:
+                pdf.ln(3)
+        except Exception:
             pdf.ln(3)
     return bytes(pdf.output())
