@@ -91,12 +91,26 @@ def generar_word(texto: str) -> bytes:
     return buffer.getvalue()
 
 
+def _limpiar_para_pdf(texto: str) -> str:
+    reemplazos = {
+        '\u2013': '-', '\u2014': '-',
+        '\u2018': "'", '\u2019': "'",
+        '\u201c': '"', '\u201d': '"',
+        '\u2022': '-', '\u2026': '...',
+        '\u00b7': '-',
+    }
+    for char, reemplazo in reemplazos.items():
+        texto = texto.replace(char, reemplazo)
+    return texto.encode('latin-1', errors='replace').decode('latin-1')
+
+
 def generar_pdf(texto: str) -> bytes:
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Helvetica", size=11)
     pdf.set_auto_page_break(auto=True, margin=15)
     for linea in texto.split("\n"):
+        linea = _limpiar_para_pdf(linea)
         if linea.strip():
             pdf.multi_cell(0, 7, linea)
         else:
