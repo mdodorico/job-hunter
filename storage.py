@@ -116,7 +116,7 @@ def guardar_config(config: dict):
             sheet = spreadsheet.worksheet(SHEET_CONFIG)
         except Exception:
             sheet = spreadsheet.add_worksheet(title=SHEET_CONFIG, rows=10, cols=2)
-        sheet.update("A1", json.dumps(config, ensure_ascii=False))
+        sheet.update_cell(1, 1, json.dumps(config, ensure_ascii=False))
         print("✅ Configuración guardada en Google Sheets")
         return True
     except Exception as e:
