@@ -87,41 +87,37 @@ def run():
 
 @app.route("/diagnostico", methods=["GET"])
 def diagnostico():
-    from scraper import scrape_computrabajo, scrape_empleosit, scrape_linkedin
     import requests
     from bs4 import BeautifulSoup
 
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     resultado = {}
 
     # ── Test Computrabajo ────────────────────────────────────
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        url_test = "https://ar.computrabajo.com/trabajo-de-qa"
-        r = requests.get(url_test, headers=headers, timeout=10)
+        r = requests.get("https://ar.computrabajo.com/trabajo-de-qa", headers=headers, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
         articles = soup.find_all("article")
-        primer_articulo_html = str(articles[0])[:500] if articles else "Sin articles"
         resultado["computrabajo"] = {
             "status_code": r.status_code,
             "articles_encontrados": len(articles),
-            "primer_articulo_html": primer_articulo_html,
-            "ofertas_filtradas": len(scrape_computrabajo()),
+            "primer_articulo_html": str(articles[0])[:600] if articles else "Sin articles",
         }
     except Exception as e:
         resultado["computrabajo"] = {"error": str(e)}
 
     # ── Test EmpleosIT ───────────────────────────────────────
     try:
-        url_test = "https://www.empleosit.com.ar/find-jobs/Tester-QA/"
-        r = requests.get(url_test, headers=headers, timeout=10)
+        r = requests.get("https://www.empleosit.com.ar/find-jobs/Tester-QA/", headers=headers, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
-        cards = soup.find_all("article")
-        primer_card_html = str(cards[0])[:500] if cards else "Sin articles"
+        articles = soup.find_all("article")
+        divs_job = soup.find_all("div", class_=lambda x: x and "job" in str(x).lower())
         resultado["empleosit"] = {
             "status_code": r.status_code,
-            "cards_encontradas": len(cards),
-            "primer_card_html": primer_card_html,
-            "ofertas_filtradas": len(scrape_empleosit()),
+            "articles_encontrados": len(articles),
+            "divs_job_encontrados": len(divs_job),
+            "primer_article_html": str(articles[0])[:600] if articles else "Sin articles",
+            "primer_div_html": str(divs_job[0])[:600] if divs_job else "Sin divs job",
         }
     except Exception as e:
         resultado["empleosit"] = {"error": str(e)}

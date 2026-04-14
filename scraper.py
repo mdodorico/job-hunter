@@ -113,32 +113,29 @@ def obtener_detalle_oferta(url: str) -> str:
 
 def oferta_pasa_filtro_profundo(titulo: str, url: str, ubicacion: str = "") -> bool:
     """
-    Filtra por ubicación en título y cuerpo del aviso.
-    Lógica única: si se menciona una ubicación, debe estar en la lista aceptada.
+    Filtra por ubicación. Si el card ya tiene ubicación específica, la usa
+    directamente sin descargar el cuerpo (mucho más rápido).
     """
     # ── Filtro 0: ubicación explícita del card ────────────────
     if ubicacion and ubicacion not in ("Ver oferta", "Argentina"):
         ub_lower = ubicacion.lower()
         if not ubicacion_es_aceptada(ub_lower):
             return False
+        return True  # ubicación confirmada, no hace falta descargar el cuerpo
 
+    # ── Filtro 1: título ─────────────────────────────────────
     titulo_lower = titulo.lower()
 
-    # Extraer texto entre paréntesis del título si existe
     entre_parentesis = re.findall(r'\(([^)]+)\)', titulo_lower)
     for fragmento in entre_parentesis:
         fragmento = fragmento.strip()
-        # Si el fragmento parece una ubicación pero no está en las aceptadas
         if len(fragmento) > 3 and not ubicacion_es_aceptada(fragmento):
-            # Verificamos que no sea algo que no es ubicación (ej: "Jr", "Sr", siglas)
             palabras_ubicacion = [
                 "ciudad", "provincia", "localidad", "barrio", "caba",
                 "gba", "norte", "sur", "oeste", "este", "capital"
             ]
-            # Si tiene más de una palabra o coincide con patrón de ciudad → excluir
             if " " in fragmento or any(p in fragmento for p in palabras_ubicacion):
                 return False
-            # Si es una sola palabra en mayúscula inicial, probablemente es ciudad
             if fragmento.replace(" ", "").isalpha() and len(fragmento) > 5:
                 return False
 
@@ -146,15 +143,13 @@ def oferta_pasa_filtro_profundo(titulo: str, url: str, ubicacion: str = "") -> b
         if not ubicacion_es_aceptada(titulo_lower):
             return False
 
-    # ── Filtro 2: cuerpo del aviso ───────────────────────────
+    # ── Filtro 2: cuerpo del aviso (solo si no hay ubicación del card) ───
     cuerpo = obtener_detalle_oferta(url)
 
     if cuerpo:
         if texto_menciona_ubicacion(cuerpo):
             if not ubicacion_es_aceptada(cuerpo):
                 return False
-
-        # ── Filtro 3: perfil IT ──────────────────────────────
         if not any(p in cuerpo for p in PERFILES_IT):
             return False
 
