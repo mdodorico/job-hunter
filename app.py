@@ -85,6 +85,50 @@ def run():
     return jsonify({"status": "Búsqueda iniciada ✅"})
 
 
+@app.route("/diagnostico", methods=["GET"])
+def diagnostico():
+    from scraper import scrape_computrabajo, scrape_empleosit, scrape_linkedin
+    import requests
+    from bs4 import BeautifulSoup
+
+    resultado = {}
+
+    # ── Test Computrabajo ────────────────────────────────────
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        url_test = "https://ar.computrabajo.com/trabajo-de-qa"
+        r = requests.get(url_test, headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        articles = soup.find_all("article")
+        primer_articulo_html = str(articles[0])[:500] if articles else "Sin articles"
+        resultado["computrabajo"] = {
+            "status_code": r.status_code,
+            "articles_encontrados": len(articles),
+            "primer_articulo_html": primer_articulo_html,
+            "ofertas_filtradas": len(scrape_computrabajo()),
+        }
+    except Exception as e:
+        resultado["computrabajo"] = {"error": str(e)}
+
+    # ── Test EmpleosIT ───────────────────────────────────────
+    try:
+        url_test = "https://www.empleosit.com.ar/find-jobs/Tester-QA/"
+        r = requests.get(url_test, headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        cards = soup.find_all("article")
+        primer_card_html = str(cards[0])[:500] if cards else "Sin articles"
+        resultado["empleosit"] = {
+            "status_code": r.status_code,
+            "cards_encontradas": len(cards),
+            "primer_card_html": primer_card_html,
+            "ofertas_filtradas": len(scrape_empleosit()),
+        }
+    except Exception as e:
+        resultado["empleosit"] = {"error": str(e)}
+
+    return jsonify(resultado)
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
