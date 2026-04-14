@@ -27,6 +27,16 @@ def extraer_texto_word(file_bytes: bytes) -> str:
     return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
 
 
+def _extraer_id_linkedin(url: str) -> str:
+    match = re.search(r'/jobs/view/(\d+)', url)
+    if match:
+        return match.group(1)
+    match = re.search(r'currentJobId=(\d+)', url)
+    if match:
+        return match.group(1)
+    return ""
+
+
 def scrapear_aviso(url: str) -> str:
     try:
         headers = {
@@ -36,12 +46,28 @@ def scrapear_aviso(url: str) -> str:
                 "Chrome/120.0.0.0 Safari/537.36"
             )
         }
+
+        # ── LinkedIn: usar endpoint público de guest ──────────
+        if "linkedin.com" in url:
+            job_id = _extraer_id_linkedin(url)
+            if job_id:
+                api_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}"
+                response = requests.get(api_url, headers=headers, timeout=15)
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, "html.parser")
+                    for tag in soup(["script", "style"]):
+                        tag.decompose()
+                    lineas = [l.strip() for l in soup.get_text(separator="\n").splitlines() if l.strip()]
+                    return "\n".join(lineas)[:8000]
+
+        # ── Otros sitios: scraping general ───────────────────
         response = requests.get(url, headers=headers, timeout=15)
         soup = BeautifulSoup(response.text, "html.parser")
         for tag in soup(["script", "style", "nav", "header", "footer"]):
             tag.decompose()
         lineas = [l.strip() for l in soup.get_text(separator="\n").splitlines() if l.strip()]
         return "\n".join(lineas)[:8000]
+
     except Exception as e:
         print(f"❌ Error scrapeando aviso: {e}")
         return ""
