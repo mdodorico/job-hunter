@@ -12,9 +12,9 @@ INTERVALO_SEGUNDOS = 3600
 
 # ── SITIOS ACTIVOS ───────────────────────────────────────────
 SITIOS = {
-    "computrabajo": True,
+    "computrabajo": False,
     "linkedin": True,
-    "empleosit": True,
+    "empleosit": False,
 }
 
 # ── KEYWORDS DE BÚSQUEDA ─────────────────────────────────────
