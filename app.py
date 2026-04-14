@@ -2,31 +2,96 @@
 # APP - Punto de entrada web para Railway
 # ============================================================
 
-from flask import Flask, jsonify, request, render_template, send_file
+from flask import Flask, jsonify, request, render_template, send_file, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from main import ejecutar_busqueda
 from cv_adapter import (
     extraer_texto_pdf, extraer_texto_word,
     scrapear_aviso, adaptar_cv,
     generar_word, generar_pdf
 )
+from auth import buscar_usuario_por_id, buscar_usuario_por_email, registrar_usuario
 import threading
 import os
 from io import BytesIO
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "job-hunter-secret-2024")
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login_page"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return buscar_usuario_por_id(user_id)
+
+
+# ── Auth routes ──────────────────────────────────────────────
+
+@app.route("/login", methods=["GET"])
+def login_page():
+    return render_template("login.html")
+
+
+@app.route("/login", methods=["POST"])
+def login_post():
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "")
+    user = buscar_usuario_por_email(email)
+    if not user or not user.check_password(password):
+        return render_template("login.html", error="Email o contraseña incorrectos.")
+    login_user(user)
+    return redirect(url_for("home"))
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login_page"))
+
+
+@app.route("/registro", methods=["GET"])
+def registro_page():
+    return render_template("registro.html")
+
+
+@app.route("/registro", methods=["POST"])
+def registro_post():
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "")
+    password2 = request.form.get("password2", "")
+    if not email or not password:
+        return render_template("registro.html", error="Completá todos los campos.")
+    if password != password2:
+        return render_template("registro.html", error="Las contraseñas no coinciden.")
+    if len(password) < 6:
+        return render_template("registro.html", error="La contraseña debe tener al menos 6 caracteres.")
+    user, error = registrar_usuario(email, password)
+    if error:
+        return render_template("registro.html", error=error)
+    login_user(user)
+    return redirect(url_for("home"))
+
+
+# ── App routes ───────────────────────────────────────────────
 
 @app.route("/")
+@login_required
 def home():
     return render_template("index.html")
 
 
 @app.route("/adaptar", methods=["GET"])
+@login_required
 def adaptar_page():
     return render_template("adaptar.html")
 
 
 @app.route("/adaptar", methods=["POST"])
+@login_required
 def adaptar_cv_route():
     url = request.form.get("url", "").strip()
     formato = request.form.get("formato", "word")
@@ -79,10 +144,11 @@ def adaptar_cv_route():
 
 
 @app.route("/configurar", methods=["GET"])
+@login_required
 def configurar_page():
     from storage import cargar_config
     from config import KEYWORDS as KEYWORDS_DEFAULT, KEYWORDS_URL as KEYWORDS_URL_DEFAULT
-    config = cargar_config() or {
+    config = cargar_config(user_id=current_user.id) or {
         "keywords": KEYWORDS_DEFAULT,
         "keywords_url": KEYWORDS_URL_DEFAULT,
     }
@@ -90,6 +156,7 @@ def configurar_page():
 
 
 @app.route("/configurar/generar", methods=["POST"])
+@login_required
 def configurar_generar():
     import anthropic, json
     data = request.get_json()
@@ -121,7 +188,6 @@ Respondé ÚNICAMENTE con un JSON válido, sin explicaciones. Ejemplo de formato
             messages=[{"role": "user", "content": prompt}]
         )
         respuesta = message.content[0].text.strip()
-        # Limpiar posibles bloques markdown
         respuesta = respuesta.replace("```json", "").replace("```", "").strip()
         config_generada = json.loads(respuesta)
         return jsonify(config_generada)
@@ -130,10 +196,11 @@ Respondé ÚNICAMENTE con un JSON válido, sin explicaciones. Ejemplo de formato
 
 
 @app.route("/configurar/guardar", methods=["POST"])
+@login_required
 def configurar_guardar():
     from storage import guardar_config
     data = request.get_json()
-    ok = guardar_config(data)
+    ok = guardar_config(data, user_id=current_user.id)
     if ok:
         return jsonify({"status": "Configuración guardada ✅"})
     return jsonify({"error": "No se pudo guardar la configuración."}), 500
@@ -144,8 +211,6 @@ def run():
     thread = threading.Thread(target=ejecutar_busqueda)
     thread.start()
     return jsonify({"status": "Búsqueda iniciada ✅"})
-
-
 
 
 if __name__ == "__main__":

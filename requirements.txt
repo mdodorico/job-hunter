@@ -3,6 +3,7 @@ beautifulsoup4
 rapidfuzz
 python-dotenv
 flask
+flask-login
 gunicorn
 gspread
 google-auth
@@ -11,3 +12,4 @@ anthropic
 python-docx
 pdfplumber
 fpdf2
+werkzeug

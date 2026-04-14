@@ -50,43 +50,59 @@ def cargar_vistos():
         return None
 
 
-def cargar_config() -> dict:
+def _get_config_sheet():
+    client = get_client()
+    if not client:
+        return None
+    try:
+        return client.open(SHEET_CONFIG).sheet1
+    except Exception:
+        try:
+            spreadsheet = client.create(SHEET_CONFIG)
+            sheet = spreadsheet.sheet1
+            sheet.append_row(["user_id", "config_json"])
+            return sheet
+        except Exception as e:
+            print(f"❌ Error creando hoja de config: {e}")
+            return None
+
+
+def cargar_config(user_id: str = "default") -> dict:
     """
-    Carga la configuración guardada desde Google Sheets.
-    Retorna None si no hay configuración guardada.
+    Carga la configuración del usuario desde Google Sheets.
     """
     try:
-        client = get_client()
-        if not client:
+        sheet = _get_config_sheet()
+        if not sheet:
             return None
-        try:
-            sheet = client.open(SHEET_CONFIG).sheet1
-        except Exception:
-            return None
-        valor = sheet.cell(1, 1).value
-        if not valor:
-            return None
-        return json.loads(valor)
+        rows = sheet.get_all_records()
+        for row in rows:
+            if str(row.get("user_id")) == str(user_id):
+                valor = row.get("config_json")
+                if valor:
+                    return json.loads(valor)
+        return None
     except Exception as e:
         print(f"❌ Error cargando config: {e}")
         return None
 
 
-def guardar_config(config: dict):
+def guardar_config(config: dict, user_id: str = "default"):
     """
-    Guarda la configuración en Google Sheets como JSON.
-    Crea la hoja si no existe.
+    Guarda la configuración del usuario en Google Sheets.
     """
     try:
-        client = get_client()
-        if not client:
+        sheet = _get_config_sheet()
+        if not sheet:
             return False
-        spreadsheet = client.open(SHEET_NAME)
-        try:
-            sheet = spreadsheet.worksheet(SHEET_CONFIG)
-        except Exception:
-            sheet = spreadsheet.add_worksheet(title=SHEET_CONFIG, rows=10, cols=2)
-        sheet.update_cell(1, 1, json.dumps(config, ensure_ascii=False))
+        rows = sheet.get_all_records()
+        config_json = json.dumps(config, ensure_ascii=False)
+        for i, row in enumerate(rows):
+            if str(row.get("user_id")) == str(user_id):
+                sheet.update_cell(i + 2, 2, config_json)
+                print("✅ Configuración actualizada en Google Sheets")
+                return True
+        sheet.append_row([str(user_id), config_json])
         print("✅ Configuración guardada en Google Sheets")
         return True
     except Exception as e:
