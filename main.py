@@ -6,7 +6,7 @@ from datetime import datetime
 from config import EMAIL_DESTINO
 from scraper import obtener_todas_las_ofertas
 from notifier import enviar_email_resumen
-from storage import cargar_vistos, guardar_vistos
+from storage import cargar_vistos, guardar_vistos, cargar_config
 
 
 def guardar_log(mensaje: str):
@@ -46,13 +46,22 @@ def ejecutar_busqueda():
     print(f"\n📬 Ofertas nuevas (no notificadas antes): {len(nuevas)}")
 
     if nuevas:
+        # ── Determinar email destino ─────────────────────────
+        config = cargar_config()
+        if config and not config.get("alertas_activas", True):
+            print("🔕 Alertas desactivadas. No se envía email.")
+            guardar_vistos([o["id"] for o in nuevas])
+            guardar_log("Búsqueda completada — alertas desactivadas")
+            return
+        destino = (config.get("email_alertas") if config and config.get("email_alertas") else EMAIL_DESTINO)
+
         # ── Enviar email con resumen ─────────────────────────
-        enviar_email_resumen(EMAIL_DESTINO, nuevas)
+        enviar_email_resumen(destino, nuevas)
 
         # ── Guardar los nuevos IDs en Google Sheets ──────────
         guardar_vistos([o["id"] for o in nuevas])
 
-        guardar_log(f"Búsqueda completada — {len(nuevas)} ofertas nuevas enviadas a {EMAIL_DESTINO}")
+        guardar_log(f"Búsqueda completada — {len(nuevas)} ofertas nuevas enviadas a {destino}")
     else:
         print("💤 No hay ofertas nuevas por ahora.")
         guardar_log("Búsqueda completada — sin ofertas nuevas")
