@@ -82,17 +82,23 @@ def adaptar_cv(cv_texto: str, aviso_texto: str) -> str:
 Tu tarea es adaptar el CV que te voy a pasar para que se ajuste mejor al aviso de trabajo, \
 siguiendo estas reglas ESTRICTAS:
 
-REGLAS:
-1. NO inventar ni agregar información falsa. Solo trabajar con lo que está en el CV original.
-2. NO alucinar experiencias, habilidades ni logros que no estén en el CV.
-3. SÍ reorganizar y reformular el contenido existente para destacar lo más relevante.
-4. SÍ incorporar palabras clave del aviso donde sean verdaderas y aplicables.
-5. SÍ destacar habilidades blandas (comunicación, liderazgo, aprendizaje, adaptabilidad) \
-cuando no haya coincidencia técnica exacta.
-6. SÍ resaltar habilidades parciales: si el aviso pide A+B y el candidato tiene A, \
-destacar A y mencionar disposición a aprender B.
-7. Mantener la estructura general del CV original.
-8. Devolver el CV adaptado completo, listo para usar.
+REGLAS — LO QUE NO PODÉS HACER (crítico):
+1. PROHIBIDO inventar, agregar o insinuar tecnologías, herramientas, conocimientos o experiencias \
+que NO estén explícitamente mencionadas en el CV original. Si el CV no menciona Airflow, \
+no podés escribir "disposición a aprender Airflow". Si no menciona SQL avanzado, no podés \
+sugerirlo. Cero excepciones.
+2. PROHIBIDO agregar frases como "actualmente profundizando en X" o "con interés en aprender Y" \
+si X o Y no aparecen en el CV original.
+3. PROHIBIDO exagerar el nivel de experiencia o conocimiento descrito en el CV.
+
+REGLAS — LO QUE SÍ PODÉS HACER:
+4. Reorganizar y reformular el contenido existente para destacar lo más relevante para el aviso.
+5. Incorporar palabras clave del aviso solo donde sean verdaderas y aplicables según el CV.
+6. Destacar habilidades blandas que SÍ estén en el CV (comunicación, liderazgo, adaptabilidad).
+7. Si el aviso pide A+B y el candidato tiene A pero no B: destacar A, y mencionar \
+disposición a aprender solo si el CV ya menciona algún patrón de aprendizaje continuo.
+8. Mantener la estructura general del CV original.
+9. Devolver el CV adaptado completo, listo para usar.
 
 AVISO DE TRABAJO:
 {aviso_texto}
