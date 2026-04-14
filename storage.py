@@ -19,54 +19,6 @@ SHEET_CONFIG = "job-hunter-config"
 CREDENTIALS_FILE = "google-credentials.json"
 
 
-def get_sheet():
-    """
-    Conecta con Google Sheets y devuelve la hoja de trabajo.
-    Funciona tanto en local (archivo JSON) como en Railway (variable de entorno).
-    """
-    try:
-        google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
-
-        if google_creds_env:
-            # ── Railway: credenciales desde variable de entorno ──
-            creds_dict = json.loads(google_creds_env)
-            creds = Credentials.from_service_account_info(
-                creds_dict, scopes=SCOPES
-            )
-        else:
-            # ── Local: credenciales desde archivo ───────────────
-            creds = Credentials.from_service_account_file(
-                CREDENTIALS_FILE, scopes=SCOPES
-            )
-
-        client = gspread.authorize(creds)
-        sheet = client.open(SHEET_NAME).sheet1
-        return sheet
-
-    except Exception as e:
-        print(f"❌ Error conectando con Google Sheets: {e}")
-        return None
-
-
-def cargar_vistos():
-    """
-    Carga los IDs de ofertas ya notificadas desde Google Sheets.
-    Retorna None si no se pudo conectar, para evitar enviar duplicados.
-    """
-    try:
-        sheet = get_sheet()
-        if not sheet:
-            print("❌ No se pudo conectar con Google Sheets. Abortando para evitar duplicados.")
-            return None
-
-        ids = sheet.col_values(1)
-        return set(ids[1:]) if len(ids) > 1 else set()
-
-    except Exception as e:
-        print(f"❌ Error cargando vistos desde Sheets: {e}")
-        return None
-
-
 def get_client():
     try:
         google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
@@ -77,6 +29,24 @@ def get_client():
         return gspread.authorize(creds)
     except Exception as e:
         print(f"❌ Error conectando con Google: {e}")
+        return None
+
+
+def cargar_vistos():
+    """
+    Carga los IDs de ofertas ya notificadas desde Google Sheets.
+    Retorna None si no se pudo conectar, para evitar enviar duplicados.
+    """
+    try:
+        client = get_client()
+        if not client:
+            print("❌ No se pudo conectar con Google Sheets. Abortando para evitar duplicados.")
+            return None
+        sheet = client.open(SHEET_NAME).sheet1
+        ids = sheet.col_values(1)
+        return set(ids[1:]) if len(ids) > 1 else set()
+    except Exception as e:
+        print(f"❌ Error cargando vistos desde Sheets: {e}")
         return None
 
 

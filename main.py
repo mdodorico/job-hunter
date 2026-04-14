@@ -3,7 +3,7 @@
 # ============================================================
 
 from datetime import datetime
-from config import EMAIL_DESTINO, INTERVALO_SEGUNDOS
+from config import EMAIL_DESTINO
 from scraper import obtener_todas_las_ofertas
 from notifier import enviar_email_resumen
 from storage import cargar_vistos, guardar_vistos
@@ -57,7 +57,7 @@ def ejecutar_busqueda():
         print("💤 No hay ofertas nuevas por ahora.")
         guardar_log("Búsqueda completada — sin ofertas nuevas")
 
-    print(f"\n⏰ Próxima búsqueda en {INTERVALO_SEGUNDOS // 60} minutos")
+    print("\n✅ Búsqueda finalizada.")
 
 
 if __name__ == "__main__":

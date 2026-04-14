@@ -152,7 +152,6 @@ def _limpiar_para_pdf(texto: str) -> str:
 
 def _pdf_linea_con_negrita(pdf, texto: str, h: int = 7):
     partes = re.split(r'(\*\*[^*]+\*\*)', texto)
-    x_inicio = pdf.get_x()
     for parte in partes:
         if parte.startswith('**') and parte.endswith('**'):
             pdf.set_font("Helvetica", style="B", size=11)

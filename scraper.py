@@ -16,13 +16,11 @@ from config import (
 )
 from storage import cargar_config
 
-def _cargar_keywords():
+def _get_keywords():
     config = cargar_config()
     if config:
         return config.get("keywords", KEYWORDS_DEFAULT), config.get("keywords_url", KEYWORDS_URL_DEFAULT)
     return KEYWORDS_DEFAULT, KEYWORDS_URL_DEFAULT
-
-KEYWORDS, KEYWORDS_URL = _cargar_keywords()
 
 
 def normalizar_id(url: str) -> str:
@@ -65,6 +63,7 @@ def oferta_es_relevante(titulo: str, descripcion: str = "") -> bool:
             return False
 
     # ── Keyword match ────────────────────────────────────────
+    KEYWORDS, _ = _get_keywords()
     tiene_keyword = False
     for keyword in KEYWORDS:
         keyword_lower = keyword.lower()
@@ -172,6 +171,7 @@ def oferta_pasa_filtro_profundo(titulo: str, url: str, ubicacion: str = "") -> b
 # ============================================================
 
 def scrape_computrabajo() -> list:
+    _, KEYWORDS_URL = _get_keywords()
     ofertas = []
     for keyword in KEYWORDS_URL:
         try:
@@ -233,18 +233,9 @@ def scrape_computrabajo() -> list:
 
 
 def scrape_linkedin() -> list:
+    _, KEYWORDS_URL = _get_keywords()
     ofertas = []
-    searches = [
-        "QA Analyst Argentina",
-        "Tester Junior Argentina",
-        "Project Manager Junior Argentina",
-        "Technical Support Argentina",
-        "Analista Funcional Argentina",
-        "Knowledge Manager Argentina",
-        "Prompt Engineer Argentina",
-        "Frontend Developer Argentina",
-        "Angular Developer Argentina",
-    ]
+    searches = [f"{kw.replace('-', ' ').title()} Argentina" for kw in KEYWORDS_URL]
 
     for search in searches:
         try:
@@ -299,6 +290,7 @@ def scrape_linkedin() -> list:
 
 
 def scrape_empleosit() -> list:
+    _, KEYWORDS_URL = _get_keywords()
     ofertas = []
     categorias = [
         "Tester-QA",
