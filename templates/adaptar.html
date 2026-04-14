@@ -220,9 +220,18 @@
     </form>
 
     <div id="estado" class="estado" style="display:none;"></div>
+
+    <div id="descarga-container" style="display:none; margin-top: 20px;">
+        <button id="btn-descargar" class="btn" style="background: #27ae60;"
+            onclick="descargarCV()">
+            📥 Descargar CV adaptado (.docx)
+        </button>
+    </div>
 </div>
 
 <script>
+    let cvBlob = null;
+
     function mostrarArchivo(input) {
         const area = document.getElementById("file-area");
         const label = document.getElementById("file-label");
@@ -233,18 +242,11 @@
         }
     }
 
-    function seleccionarFormato(valor, el) {
-        document.querySelectorAll(".formato-opcion").forEach(e => e.classList.remove("seleccionado"));
-        el.classList.add("seleccionado");
-        document.getElementById("formato").value = valor;
-    }
-
     document.getElementById("formulario").addEventListener("submit", async function(e) {
         e.preventDefault();
 
         const url = document.getElementById("url").value;
         const cv = document.getElementById("cv").files[0];
-        const formato = document.getElementById("formato").value;
         const estado = document.getElementById("estado");
         const btn = document.getElementById("btn-adaptar");
 
@@ -256,6 +258,9 @@
         }
 
         btn.disabled = true;
+        document.getElementById("descarga-container").style.display = "none";
+        cvBlob = null;
+
         estado.className = "estado procesando";
         estado.style.display = "block";
         estado.innerHTML = '<span class="spinner"></span> La IA está analizando el aviso y adaptando tu CV... esto puede tardar unos segundos.';
@@ -263,7 +268,7 @@
         const formData = new FormData();
         formData.append("url", url);
         formData.append("cv", cv);
-        formData.append("formato", formato);
+        formData.append("formato", "word");
 
         try {
             const response = await fetch("/adaptar", {
@@ -276,14 +281,10 @@
                 throw new Error(err.error || "Error desconocido");
             }
 
-            const blob = await response.blob();
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = formato === "pdf" ? "cv_adaptado.pdf" : "cv_adaptado.docx";
-            link.click();
-
+            cvBlob = await response.blob();
             estado.className = "estado procesando";
-            estado.innerHTML = "✅ ¡Tu CV adaptado fue descargado!";
+            estado.innerHTML = "✅ ¡Tu CV fue adaptado! Hacé click en el botón verde para descargarlo.";
+            document.getElementById("descarga-container").style.display = "block";
 
         } catch (err) {
             estado.className = "estado error";
@@ -292,6 +293,14 @@
             btn.disabled = false;
         }
     });
+
+    function descargarCV() {
+        if (!cvBlob) return;
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(cvBlob);
+        link.download = "cv_adaptado.docx";
+        link.click();
+    }
 </script>
 
 </body>
