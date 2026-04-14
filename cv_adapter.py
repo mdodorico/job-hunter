@@ -99,6 +99,38 @@ def _agregar_parrafo_con_negrita(doc, texto: str, justificado: bool = True):
     return p
 
 
+def _es_fila_tabla(linea: str) -> bool:
+    return linea.startswith('|') and linea.endswith('|')
+
+def _es_separador_tabla(linea: str) -> bool:
+    return _es_fila_tabla(linea) and all(c in '-| :' for c in linea)
+
+def _celdas(linea: str) -> list:
+    return [c.strip() for c in linea.strip('|').split('|')]
+
+def _agregar_tabla_word(doc, filas: list):
+    from docx.shared import RGBColor
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+
+    if not filas:
+        return
+    cols = len(_celdas(filas[0]))
+    tabla = doc.add_table(rows=0, cols=cols)
+    tabla.style = 'Table Grid'
+
+    for i, fila in enumerate(filas):
+        celdas = _celdas(fila)
+        row = tabla.add_row()
+        for j, celda in enumerate(celdas):
+            cell = row.cells[j]
+            cell.text = celda
+            if i == 0:
+                for run in cell.paragraphs[0].runs:
+                    run.bold = True
+    doc.add_paragraph('')
+
+
 def generar_word(texto: str) -> bytes:
     doc = Document()
 
@@ -106,21 +138,35 @@ def generar_word(texto: str) -> bytes:
     estilo.font.name = 'Calibri'
     estilo.font.size = Pt(11)
 
+    lineas = texto.split("\n")
     lineas_vacias_consecutivas = 0
+    i = 0
 
-    for linea in texto.split("\n"):
-        linea_strip = linea.strip()
+    while i < len(lineas):
+        linea_strip = lineas[i].strip()
 
         if linea_strip in ('---', '***', '___'):
+            i += 1
             continue
 
         if not linea_strip:
             lineas_vacias_consecutivas += 1
             if lineas_vacias_consecutivas <= 1:
                 doc.add_paragraph('')
+            i += 1
             continue
 
         lineas_vacias_consecutivas = 0
+
+        # ── Detectar tabla Markdown ───────────────────────────
+        if _es_fila_tabla(linea_strip):
+            filas_tabla = []
+            while i < len(lineas) and _es_fila_tabla(lineas[i].strip()):
+                if not _es_separador_tabla(lineas[i].strip()):
+                    filas_tabla.append(lineas[i].strip())
+                i += 1
+            _agregar_tabla_word(doc, filas_tabla)
+            continue
 
         if linea_strip.startswith('# '):
             doc.add_heading(linea_strip[2:], level=1)
@@ -130,6 +176,8 @@ def generar_word(texto: str) -> bytes:
             doc.add_heading(linea_strip[4:], level=3)
         else:
             _agregar_parrafo_con_negrita(doc, linea_strip)
+
+        i += 1
 
     buffer = BytesIO()
     doc.save(buffer)
