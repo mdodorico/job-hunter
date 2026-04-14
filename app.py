@@ -112,15 +112,36 @@ def diagnostico():
         soup = BeautifulSoup(r.text, "html.parser")
         articles = soup.find_all("article")
         divs_job = soup.find_all("div", class_=lambda x: x and "job" in str(x).lower())
+        # Mostrar todos los tags de primer nivel para entender la estructura
+        tags_body = [(tag.name, str(tag.get("class", ""))) for tag in soup.body.children if hasattr(tag, "name") and tag.name] if soup.body else []
         resultado["empleosit"] = {
             "status_code": r.status_code,
             "articles_encontrados": len(articles),
             "divs_job_encontrados": len(divs_job),
-            "primer_article_html": str(articles[0])[:600] if articles else "Sin articles",
-            "primer_div_html": str(divs_job[0])[:600] if divs_job else "Sin divs job",
+            "html_muestra": r.text[2000:4000],
         }
     except Exception as e:
         resultado["empleosit"] = {"error": str(e)}
+
+    # ── Test Computrabajo con headers completos ───────────────
+    try:
+        headers_full = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "es-AR,es;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+        }
+        r2 = requests.get("https://ar.computrabajo.com/trabajo-de-qa", headers=headers_full, timeout=10)
+        soup2 = BeautifulSoup(r2.text, "html.parser")
+        articles2 = soup2.find_all("article")
+        resultado["computrabajo_headers_completos"] = {
+            "status_code": r2.status_code,
+            "articles_encontrados": len(articles2),
+            "html_muestra": r2.text[2000:4000],
+        }
+    except Exception as e:
+        resultado["computrabajo_headers_completos"] = {"error": str(e)}
 
     return jsonify(resultado)
 
