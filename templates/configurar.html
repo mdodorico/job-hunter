@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar búsqueda — Job Hunter</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        header {
+            background: #4A90D9;
+            color: white;
+            padding: 24px 40px;
+            border-radius: 12px 12px 0 0;
+            width: 100%;
+            max-width: 700px;
+        }
+        header h1 { font-size: 28px; margin-bottom: 4px; }
+        header p { color: #e8f4fd; font-size: 14px; }
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 12px 12px;
+            padding: 36px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .menu {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .menu a {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: #f0f4f8;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #4A90D9;
+            font-weight: bold;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        .menu a:hover, .menu a.active { background: #4A90D9; color: white; }
+        h2 { color: #2c3e50; margin-bottom: 8px; font-size: 20px; }
+        .subtitulo { color: #7f8c8d; font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+        label { display: block; color: #555; margin-bottom: 6px; font-size: 14px; font-weight: bold; }
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            background: #fafafa;
+            resize: vertical;
+            min-height: 80px;
+        }
+        textarea:focus { outline: none; border-color: #4A90D9; }
+        .btn {
+            padding: 12px 24px;
+            background: #4A90D9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #357abd; }
+        .btn:disabled { background: #aaa; cursor: not-allowed; }
+        .btn-secundario {
+            padding: 12px 24px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-secundario:hover { background: #219a52; }
+        .btn-secundario:disabled { background: #aaa; cursor: not-allowed; }
+        .resultado {
+            margin-top: 28px;
+            display: none;
+        }
+        .resultado h3 { color: #2c3e50; margin-bottom: 12px; font-size: 16px; }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+            min-height: 40px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        .tag {
+            background: #e8f4fd;
+            color: #2471a3;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tag button {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+        }
+        .tag button:hover { color: #e74c3c; }
+        .agregar-tag {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .agregar-tag input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .agregar-tag button {
+            padding: 8px 16px;
+            background: #4A90D9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .estado {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .estado.procesando { background: #e8f4fd; color: #2471a3; }
+        .estado.exito { background: #eafaf1; color: #1e8449; }
+        .estado.error { background: #fde8e8; color: #c0392b; }
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 3px solid #a8d4f5;
+            border-top-color: #2471a3;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .acciones { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+        .seccion { margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎯 Job Hunter</h1>
+    <p>Tu asistente de búsqueda de empleo</p>
+</header>
+
+<div class="card">
+    <div class="menu">
+        <a href="/">🏠 Inicio</a>
+        <a href="/configurar" class="active">⚙️ Configurar búsqueda</a>
+        <a href="/adaptar">📄 Adaptar CV</a>
+    </div>
+
+    <h2>Configurar búsqueda</h2>
+    <p class="subtitulo">
+        Describí los puestos que te interesan y la IA genera automáticamente
+        los términos de búsqueda. Podés editar los resultados antes de guardar.
+    </p>
+
+    <!-- Paso 1: ingresar puestos -->
+    <label for="puestos">¿Qué tipo de trabajo estás buscando?</label>
+    <textarea id="puestos" placeholder="Ej: QA tester, frontend con Angular, soporte técnico IT...">{{ config.puestos_descripcion if config.puestos_descripcion else '' }}</textarea>
+
+    <button class="btn" onclick="generarKeywords()" id="btn-generar">
+        ✨ Generar keywords con IA
+    </button>
+
+    <!-- Resultado editable -->
+    <div class="resultado" id="resultado">
+
+        <div class="seccion">
+            <h3>Keywords de búsqueda</h3>
+            <p style="color:#7f8c8d; font-size:13px; margin-bottom:10px;">
+                Términos completos que usa el sistema para filtrar ofertas. Hacé click en ✕ para eliminar o agregá uno nuevo.
+            </p>
+            <div class="tags-container" id="tags-keywords"></div>
+            <div class="agregar-tag">
+                <input type="text" id="nuevo-keyword" placeholder="Agregar keyword..." onkeydown="if(event.key==='Enter') agregarTag('keywords')">
+                <button onclick="agregarTag('keywords')">+ Agregar</button>
+            </div>
+        </div>
+
+        <div class="seccion">
+            <h3>Keywords para URLs</h3>
+            <p style="color:#7f8c8d; font-size:13px; margin-bottom:10px;">
+                Versión simplificada para armar las URLs de búsqueda (minúsculas, con guiones).
+            </p>
+            <div class="tags-container" id="tags-keywords-url"></div>
+            <div class="agregar-tag">
+                <input type="text" id="nuevo-keyword-url" placeholder="Ej: qa-analyst..." onkeydown="if(event.key==='Enter') agregarTag('keywords_url')">
+                <button onclick="agregarTag('keywords_url')">+ Agregar</button>
+            </div>
+        </div>
+
+        <div class="acciones">
+            <button class="btn-secundario" onclick="guardarConfig()" id="btn-guardar">
+                💾 Guardar configuración
+            </button>
+            <button class="btn" style="background:#95a5a6;" onclick="regenerar()">
+                🔄 Regenerar
+            </button>
+        </div>
+    </div>
+
+    <div id="estado" class="estado" style="display:none;"></div>
+</div>
+
+<script>
+    const estado = { keywords: [], keywords_url: [] };
+
+    // Cargar config existente si la hay
+    const configInicial = {{ config | tojson }};
+    if (configInicial.keywords && configInicial.keywords.length > 0) {
+        estado.keywords = configInicial.keywords;
+        estado.keywords_url = configInicial.keywords_url || [];
+        mostrarResultado();
+    }
+
+    async function generarKeywords() {
+        const puestos = document.getElementById("puestos").value.trim();
+        if (!puestos) {
+            mostrarEstado("error", "Por favor describí los puestos que buscás.");
+            return;
+        }
+        const btn = document.getElementById("btn-generar");
+        btn.disabled = true;
+        mostrarEstado("procesando", '<span class="spinner"></span> Generando keywords con IA...');
+
+        try {
+            const res = await fetch("/configurar/generar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ puestos })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            estado.keywords = data.keywords || [];
+            estado.keywords_url = data.keywords_url || [];
+            mostrarResultado();
+            ocultarEstado();
+        } catch (err) {
+            mostrarEstado("error", "❌ " + err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function mostrarResultado() {
+        renderizarTags("tags-keywords", "keywords");
+        renderizarTags("tags-keywords-url", "keywords_url");
+        document.getElementById("resultado").style.display = "block";
+    }
+
+    function renderizarTags(containerId, tipo) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        estado[tipo].forEach((item, i) => {
+            const tag = document.createElement("div");
+            tag.className = "tag";
+            tag.innerHTML = `${item} <button onclick="eliminarTag('${tipo}', ${i})">✕</button>`;
+            container.appendChild(tag);
+        });
+    }
+
+    function eliminarTag(tipo, index) {
+        estado[tipo].splice(index, 1);
+        renderizarTags(tipo === "keywords" ? "tags-keywords" : "tags-keywords-url", tipo);
+    }
+
+    function agregarTag(tipo) {
+        const inputId = tipo === "keywords" ? "nuevo-keyword" : "nuevo-keyword-url";
+        const input = document.getElementById(inputId);
+        const valor = input.value.trim();
+        if (!valor) return;
+        estado[tipo].push(valor);
+        input.value = "";
+        renderizarTags(tipo === "keywords" ? "tags-keywords" : "tags-keywords-url", tipo);
+    }
+
+    async function guardarConfig() {
+        const btn = document.getElementById("btn-guardar");
+        btn.disabled = true;
+        mostrarEstado("procesando", '<span class="spinner"></span> Guardando...');
+
+        const puestos = document.getElementById("puestos").value.trim();
+
+        try {
+            const res = await fetch("/configurar/guardar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    keywords: estado.keywords,
+                    keywords_url: estado.keywords_url,
+                    puestos_descripcion: puestos,
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            mostrarEstado("exito", "✅ Configuración guardada. La próxima búsqueda usará estos keywords.");
+        } catch (err) {
+            mostrarEstado("error", "❌ " + err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function regenerar() {
+        document.getElementById("resultado").style.display = "none";
+        ocultarEstado();
+    }
+
+    function mostrarEstado(tipo, mensaje) {
+        const el = document.getElementById("estado");
+        el.className = "estado " + tipo;
+        el.innerHTML = mensaje;
+        el.style.display = "block";
+    }
+
+    function ocultarEstado() {
+        document.getElementById("estado").style.display = "none";
+    }
+</script>
+
+</body>
+</html>

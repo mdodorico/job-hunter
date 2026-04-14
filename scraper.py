@@ -9,9 +9,20 @@ from urllib.parse import urlparse, urlunparse
 from bs4 import BeautifulSoup
 from rapidfuzz import fuzz
 from config import (
-    KEYWORDS, KEYWORDS_URL, NIVELES_ACEPTADOS, NIVELES_EXCLUYENTES,
+    KEYWORDS as KEYWORDS_DEFAULT,
+    KEYWORDS_URL as KEYWORDS_URL_DEFAULT,
+    NIVELES_ACEPTADOS, NIVELES_EXCLUYENTES,
     UBICACIONES_ACEPTADAS, INDICADORES_UBICACION, PERFILES_IT, SITIOS
 )
+from storage import cargar_config
+
+def _cargar_keywords():
+    config = cargar_config()
+    if config:
+        return config.get("keywords", KEYWORDS_DEFAULT), config.get("keywords_url", KEYWORDS_URL_DEFAULT)
+    return KEYWORDS_DEFAULT, KEYWORDS_URL_DEFAULT
+
+KEYWORDS, KEYWORDS_URL = _cargar_keywords()
 
 
 def normalizar_id(url: str) -> str:

@@ -78,6 +78,67 @@ def adaptar_cv_route():
     )
 
 
+@app.route("/configurar", methods=["GET"])
+def configurar_page():
+    from storage import cargar_config
+    from config import KEYWORDS as KEYWORDS_DEFAULT, KEYWORDS_URL as KEYWORDS_URL_DEFAULT
+    config = cargar_config() or {
+        "keywords": KEYWORDS_DEFAULT,
+        "keywords_url": KEYWORDS_URL_DEFAULT,
+    }
+    return render_template("configurar.html", config=config)
+
+
+@app.route("/configurar/generar", methods=["POST"])
+def configurar_generar():
+    import anthropic, json
+    data = request.get_json()
+    puestos = data.get("puestos", "")
+
+    if not puestos:
+        return jsonify({"error": "Ingresá al menos un puesto."}), 400
+
+    client = anthropic.Anthropic()
+    prompt = f"""Sos un experto en búsqueda de empleo en Argentina.
+El usuario quiere buscar trabajo en los siguientes puestos o áreas:
+
+{puestos}
+
+Generá dos listas en formato JSON:
+1. "keywords": lista de términos de búsqueda completos (títulos de puestos, variantes en español e inglés)
+2. "keywords_url": lista de los mismos términos en formato URL (minúsculas, palabras separadas por guiones, sin caracteres especiales)
+
+Respondé ÚNICAMENTE con un JSON válido, sin explicaciones. Ejemplo de formato:
+{{
+  "keywords": ["QA Analyst", "Tester", "Analista QA"],
+  "keywords_url": ["qa-analyst", "tester", "analista-qa"]
+}}"""
+
+    try:
+        message = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        respuesta = message.content[0].text.strip()
+        # Limpiar posibles bloques markdown
+        respuesta = respuesta.replace("```json", "").replace("```", "").strip()
+        config_generada = json.loads(respuesta)
+        return jsonify(config_generada)
+    except Exception as e:
+        return jsonify({"error": f"Error generando configuración: {str(e)}"}), 500
+
+
+@app.route("/configurar/guardar", methods=["POST"])
+def configurar_guardar():
+    from storage import guardar_config
+    data = request.get_json()
+    ok = guardar_config(data)
+    if ok:
+        return jsonify({"status": "Configuración guardada ✅"})
+    return jsonify({"error": "No se pudo guardar la configuración."}), 500
+
+
 @app.route("/run", methods=["POST", "GET"])
 def run():
     thread = threading.Thread(target=ejecutar_busqueda)
