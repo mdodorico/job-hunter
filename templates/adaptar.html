@@ -214,15 +214,6 @@
         </div>
         <input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx" onchange="mostrarArchivo(this)">
 
-        <label>Formato de descarga</label>
-        <div class="formato-row">
-            <div class="formato-opcion seleccionado" onclick="seleccionarFormato('word', this)">
-                📝 Word (.docx)
-            </div>
-            <div class="formato-opcion" onclick="seleccionarFormato('pdf', this)">
-                📄 PDF
-            </div>
-        </div>
         <input type="hidden" id="formato" value="word">
 
         <button type="submit" class="btn" id="btn-adaptar">Adaptar mi CV</button>
