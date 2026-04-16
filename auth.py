@@ -5,9 +5,10 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from storage import get_client
+import os
 import json
 
-SHEET_USERS = "job-hunter-users"
+SHEET_USERS_ID = os.getenv("SHEET_USERS_ID", "")
 
 
 class User(UserMixin):
@@ -25,17 +26,10 @@ def _get_users_sheet():
     if not client:
         return None
     try:
-        return client.open(SHEET_USERS).sheet1
-    except Exception:
-        # Crear la hoja si no existe
-        try:
-            spreadsheet = client.create(SHEET_USERS)
-            sheet = spreadsheet.sheet1
-            sheet.append_row(["id", "email", "password_hash"])
-            return sheet
-        except Exception as e:
-            print(f"❌ Error creando hoja de usuarios: {e}")
-            return None
+        return client.open_by_key(SHEET_USERS_ID).sheet1
+    except Exception as e:
+        print(f"❌ Error abriendo hoja de usuarios: {e}")
+        return None
 
 
 def cargar_todos_usuarios() -> list:

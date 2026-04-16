@@ -8,15 +8,14 @@ import os
 import json
 from datetime import datetime
 
-# ── Configuración de Google Sheets ───────────────────────────
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-SHEET_NAME = "job-hunter-vistos"
-SHEET_CONFIG = "job-hunter-config"
 CREDENTIALS_FILE = "google-credentials.json"
+
+# IDs de las hojas (evita búsqueda por Drive API)
+SHEET_MAIN_ID   = os.getenv("SHEET_MAIN_ID", "")   # contiene vistos + config
+SHEET_CONFIG_GID = 518422919                          # gid de la pestaña config
+SHEET_USERS_ID  = os.getenv("SHEET_USERS_ID", "")   # archivo separado de usuarios
 
 
 def get_client():
@@ -32,21 +31,14 @@ def get_client():
         return None
 
 
-def cargar_vistos():
-    """
-    Carga los IDs de ofertas ya notificadas desde Google Sheets.
-    Retorna None si no se pudo conectar, para evitar enviar duplicados.
-    """
+def _get_vistos_sheet():
+    client = get_client()
+    if not client:
+        return None
     try:
-        client = get_client()
-        if not client:
-            print("❌ No se pudo conectar con Google Sheets. Abortando para evitar duplicados.")
-            return None
-        sheet = client.open(SHEET_NAME).sheet1
-        ids = sheet.col_values(1)
-        return set(ids[1:]) if len(ids) > 1 else set()
+        return client.open_by_key(SHEET_MAIN_ID).sheet1
     except Exception as e:
-        print(f"❌ Error cargando vistos desde Sheets: {e}")
+        print(f"❌ Error abriendo hoja de vistos: {e}")
         return None
 
 
@@ -55,16 +47,43 @@ def _get_config_sheet():
     if not client:
         return None
     try:
-        return client.open(SHEET_CONFIG).sheet1
-    except Exception:
-        try:
-            spreadsheet = client.create(SHEET_CONFIG)
-            sheet = spreadsheet.sheet1
-            sheet.append_row(["user_id", "config_json"])
-            return sheet
-        except Exception as e:
-            print(f"❌ Error creando hoja de config: {e}")
+        return client.open_by_key(SHEET_MAIN_ID).get_worksheet_by_id(SHEET_CONFIG_GID)
+    except Exception as e:
+        print(f"❌ Error abriendo hoja de config: {e}")
+        return None
+
+
+def cargar_vistos():
+    """
+    Carga los IDs de ofertas ya notificadas desde Google Sheets.
+    Retorna None si no se pudo conectar, para evitar enviar duplicados.
+    """
+    try:
+        sheet = _get_vistos_sheet()
+        if not sheet:
+            print("❌ No se pudo conectar con Google Sheets. Abortando para evitar duplicados.")
             return None
+        ids = sheet.col_values(1)
+        return set(ids[1:]) if len(ids) > 1 else set()
+    except Exception as e:
+        print(f"❌ Error cargando vistos desde Sheets: {e}")
+        return None
+
+
+def guardar_vistos(nuevos_ids: list):
+    """
+    Agrega los nuevos IDs de ofertas vistas a Google Sheets.
+    """
+    try:
+        sheet = _get_vistos_sheet()
+        if not sheet:
+            return
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        filas = [[id, fecha] for id in nuevos_ids]
+        sheet.append_rows(filas)
+        print(f"✅ {len(nuevos_ids)} IDs guardados en Google Sheets")
+    except Exception as e:
+        print(f"❌ Error guardando en Sheets: {e}")
 
 
 def cargar_config(user_id: str = "default") -> dict:
@@ -108,22 +127,3 @@ def guardar_config(config: dict, user_id: str = "default"):
     except Exception as e:
         print(f"❌ Error guardando config: {e}")
         return False
-
-
-def guardar_vistos(nuevos_ids: list):
-    """
-    Agrega los nuevos IDs de ofertas vistas a Google Sheets.
-    """
-    try:
-        sheet = get_sheet()
-        if not sheet:
-            return
-
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        filas = [[id, fecha] for id in nuevos_ids]
-        sheet.append_rows(filas)
-
-        print(f"✅ {len(nuevos_ids)} IDs guardados en Google Sheets")
-
-    except Exception as e:
-        print(f"❌ Error guardando en Sheets: {e}")
