@@ -7,8 +7,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from storage import get_client
 import os
 import json
+import time
 
 SHEET_USERS_ID = os.getenv("SHEET_USERS_ID", "")
+
+_users_cache = {}       # {user_id: User}
+_cache_ts = 0
+_CACHE_TTL = 300        # segundos
 
 
 class User(UserMixin):
@@ -32,30 +37,44 @@ def _get_users_sheet():
         return None
 
 
-def cargar_todos_usuarios() -> list:
+def _cargar_cache():
+    global _users_cache, _cache_ts
     try:
         sheet = _get_users_sheet()
         if not sheet:
-            return []
+            return
         rows = sheet.get_all_records()
-        return [User(str(r["id"]), r["email"], r["password_hash"]) for r in rows]
+        _users_cache = {
+            str(r["id"]): User(str(r["id"]), r["email"], r["password_hash"])
+            for r in rows
+        }
+        _cache_ts = time.time()
     except Exception as e:
         print(f"❌ Error cargando usuarios: {e}")
-        return []
+
+
+def _cache_vigente():
+    return _users_cache and (time.time() - _cache_ts) < _CACHE_TTL
+
+
+def cargar_todos_usuarios() -> list:
+    if not _cache_vigente():
+        _cargar_cache()
+    return list(_users_cache.values())
 
 
 def buscar_usuario_por_id(user_id: str):
-    usuarios = cargar_todos_usuarios()
-    for u in usuarios:
-        if u.id == str(user_id):
-            return u
-    return None
+    if not _cache_vigente():
+        _cargar_cache()
+    return _users_cache.get(str(user_id))
 
 
 def buscar_usuario_por_email(email: str):
-    usuarios = cargar_todos_usuarios()
-    for u in usuarios:
-        if u.email.lower() == email.lower():
+    if not _cache_vigente():
+        _cargar_cache()
+    email_lower = email.lower()
+    for u in _users_cache.values():
+        if u.email.lower() == email_lower:
             return u
     return None
 
@@ -75,8 +94,9 @@ def registrar_usuario(email: str, password: str):
         rows = sheet.get_all_records()
         nuevo_id = str(len(rows) + 1)
         password_hash = generate_password_hash(password)
+        nuevo_usuario = User(nuevo_id, email, password_hash)
         sheet.append_row([nuevo_id, email, password_hash])
-
-        return User(nuevo_id, email, password_hash), None
+        _users_cache[nuevo_id] = nuevo_usuario
+        return nuevo_usuario, None
     except Exception as e:
         return None, f"Error al registrar: {str(e)}"
